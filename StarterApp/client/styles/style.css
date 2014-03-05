@@ -3,7 +3,10 @@
  */
 
 /* Links */
-a,
+a {
+    color:#FF9F30;
+}
+
 a:focus,
 a:hover {
   color: #fff;

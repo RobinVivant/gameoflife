@@ -7,6 +7,7 @@ Router.configure({
 
 Router.map(function() {
   this.route('home', {path: '/'});
+  this.route('description', {path: '/description'});
   this.route('simulation', {path: '/simulation'});
   this.route('about', {path: '/about'});
 });
