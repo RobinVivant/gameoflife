@@ -7,3 +7,7 @@ insecure
 preserve-inputs
 bootstrap
 jquery
+iron-router
+bootstrap-3
+spin
+standard-app-packages
