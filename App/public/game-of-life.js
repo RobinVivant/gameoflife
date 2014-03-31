@@ -6,9 +6,9 @@
  * 04/Sep/2010
  */
 
-(function () {
+//(function () {
 
-  var GOL = {
+  GOL = {
 
     columns : 0,
     rows : 0,
@@ -1159,9 +1159,9 @@
 
   /**
    * Init on 'load' event
-   
+
   GOL.helpers.registerEvent(window, 'load', function () {
     GOL.init();
   }, false);
 */
-}());
+//}());

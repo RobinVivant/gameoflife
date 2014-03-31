@@ -7,10 +7,10 @@ $.extend(Template.home, {
     fsp: "FSP"
 });
 
-Template.home.created = function(){
+Template.home.rendered = function(){
     Meteor.defer(function(){
 
-        $('#popups').magnificPopup({
+        $('#test-popup').magnificPopup({
             type: 'image'
             });
     });
