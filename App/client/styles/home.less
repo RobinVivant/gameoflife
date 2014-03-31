@@ -1,0 +1,50 @@
+.white-popup {
+  position: absolute;
+  background: #FFF;
+  padding: 20px;
+  width:auto;
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+/*
+
+====== Zoom-out effect ======
+
+*/
+.mfp-zoom-out {
+
+/* start state */
+    .mfp-with-anim {
+        opacity: 0;
+        transition: all 0.3s ease-in-out;
+        transform: scale(1.3);
+    }
+    &.mfp-bg {
+        opacity: 0;
+        transition: all 0.3s ease-out;
+    }
+
+/* animate in */
+    &.mfp-ready {
+        .mfp-with-anim {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    &.mfp-bg {
+        opacity: 0.8;
+    }
+}
+
+/* animate out */
+&.mfp-removing {
+
+    .mfp-with-anim {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+    &.mfp-bg {
+        opacity: 0;
+    }
+}
