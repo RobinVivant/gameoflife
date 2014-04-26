@@ -37,7 +37,24 @@ GOL.prototype = {
         this.allCells = [];
         this.cellStatuses = [];
 
-        this.resetSimulation();
+        this.refreshGrid();
+
+        this.allCells = [];
+        this.cellStatuses = [];
+
+        for (var y = 0; y < this.config.numRows; y++)
+        {
+            for (var x = 0; x < this.config.numCols; x++)
+            {
+                var cell =  this.phaser.add.sprite(x * this.config.grid.cellSize, y * this.config.grid.cellSize, "cell");
+                cell.visible = (Math.random() > 1-this.config.density);
+                cell.width = this.config.grid.cellSize;
+                cell.height = this.config.grid.cellSize;
+
+                this.allCells.push(cell);
+                this.cellStatuses.push(cell.visible);
+            }
+        }
 
         this.phaser.input.mouse.mouseDownCallback = this.onMouseDown;
         this.phaser.input.mouse.mouseUpCallback = this.onMouseUp;
@@ -49,6 +66,10 @@ GOL.prototype = {
             .onDown.add(this.resetSimulation, this);
         this.phaser.input.keyboard.addKey(Phaser.Keyboard.ENTER)
             .onDown.add(this.clearSimulation, this);
+        this.phaser.input.keyboard.addKey(Phaser.Keyboard.F)
+            .onDown.add(this.goFS, this);
+
+        this.phaser.stage.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
 
         // ALGO SIMPLISTE
@@ -57,13 +78,20 @@ GOL.prototype = {
     },
 
     update : function () {
-        if(  !this.mouseDown)
+        if(  !this.phaser.input.activePointer.isDown)
             return;
+
+
 
         var x = Math.floor(this.phaser.input.x/this.config.grid.cellSize);
         var y = Math.floor(this.phaser.input.y/this.config.grid.cellSize);
         var cell = this.allCells[y * this.config.numCols + x];
-        cell.visible = true;
+
+        if( this.phaser.input.mouse.button == Phaser.Mouse.MIDDLE_BUTTON)
+            cell.visible = false;
+        else
+            cell.visible = true;
+
         this.cellStatuses[y * this.config.numCols + x] = cell.visible;
 
     },
@@ -97,29 +125,12 @@ GOL.prototype = {
     clearSimulation : function(){
         ticker.stop();
 
-        this.refreshGrid();
-
         this.allCells.forEach(function(cell){
-            cell.kill();
+            cell.visible = false;
         });
-        this.allCells = [];
-        this.cellStatuses = [];
-
-        for (var y = 0; y < this.config.numRows; y++)
-        {
-            for (var x = 0; x < this.config.numCols; x++)
-            {
-                var cell =  this.phaser.add.sprite(x * this.config.grid.cellSize, y * this.config.grid.cellSize, "cell");
-                cell.visible = false;
-                cell.width = this.config.grid.cellSize;
-                cell.height = this.config.grid.cellSize;
-
-                this.allCells.push(cell);
-                this.cellStatuses.push(cell.visible);
-            }
+        for( var i = 0; i < this.cellStatuses.length; i++){
+            this.cellStatuses[i] = false;
         }
-
-
     },
 
     resetSimulation : function(){
@@ -154,6 +165,13 @@ GOL.prototype = {
 
     onMouseUp : function(){
         this.mouseDown = false;
+
+    },
+
+    goFS : function(){
+        this.phaser.scale.startFullScreen();
+        this.phaser.scale.setShowAll();
+        this.phaser.scale.refresh();
 
     },
 
