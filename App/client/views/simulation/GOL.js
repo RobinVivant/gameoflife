@@ -1,7 +1,7 @@
 GOL = function(element, config){
-    
+
     this.elapsedTime = 0;
-    
+
     this.config = config;
 
     this.mouseDown = false;
@@ -10,6 +10,7 @@ GOL = function(element, config){
 
     this.allCells = [];
     this.cellStatuses = [];
+    this.cellStatusesFuture = [];
     this.neighbors = [];
 
 
@@ -34,13 +35,7 @@ GOL.prototype = {
             new Phaser.Point(-1, 0)
         ];
 
-        this.allCells = [];
-        this.cellStatuses = [];
-
         this.refreshGrid();
-
-        this.allCells = [];
-        this.cellStatuses = [];
 
         for (var y = 0; y < this.config.numRows; y++)
         {
@@ -53,6 +48,7 @@ GOL.prototype = {
 
                 this.allCells.push(cell);
                 this.cellStatuses.push(cell.visible);
+                this.cellStatusesFuture.push(cell.visible);
             }
         }
 
@@ -73,8 +69,8 @@ GOL.prototype = {
 
 
         // ALGO SIMPLISTE
-        ticker.subscribe(this.runGeneration);
-
+        //ticker.subscribe(this.runGeneration);
+        this.runAsyncGeneration();
     },
 
     update : function () {
@@ -95,11 +91,11 @@ GOL.prototype = {
         this.cellStatuses[y * this.config.numCols + x] = cell.visible;
 
     },
-    
+
     refreshGrid : function(){
         var minLength =
-            this.config.grid.width > this.config.grid.height ?
-                this.config.grid.height : this.config.grid.width;
+                this.config.grid.width > this.config.grid.height ?
+            this.config.grid.height : this.config.grid.width;
 
         this.config.grid.cellSize = Math.floor(minLength * this.config.grid.resolution);
 
@@ -130,6 +126,7 @@ GOL.prototype = {
         });
         for( var i = 0; i < this.cellStatuses.length; i++){
             this.cellStatuses[i] = false;
+            this.cellStatusesFuture[i] = false;
         }
     },
 
@@ -143,6 +140,7 @@ GOL.prototype = {
         });
         this.allCells = [];
         this.cellStatuses = [];
+        this.cellStatusesFuture = [];
 
         for (var y = 0; y < this.config.numRows; y++)
         {
@@ -155,6 +153,7 @@ GOL.prototype = {
 
                 this.allCells.push(cell);
                 this.cellStatuses.push(cell.visible);
+                this.cellStatusesFuture.push(cell.visible);
             }
         }
     },
@@ -175,10 +174,79 @@ GOL.prototype = {
 
     },
 
+    runAsyncGeneration : function(){
+
+        // make a copy of the cell statuses that we can read from
+        var cellAlive = false;
+        var numAliveNeighbors = 0;
+        var cell;
+        var self = this;
+        async.each(this.allCells, function(item, callback) {
+            var x = item.x/self.config.grid.cellSize;
+            var y = item.y/self.config.grid.cellSize;
+
+            cell = self.allCells[y * self.config.numCols + x];
+            cellAlive = self.cellStatuses[y * self.config.numCols + x];
+            numAliveNeighbors = self.getNumAliveNeighbors(self.cellStatuses, x, y);
+
+            if (cellAlive)
+            {
+                if (numAliveNeighbors < 2 || numAliveNeighbors > 3)
+                {
+                    cell.visible = false;
+                }
+                else
+                {
+                    cell.visible = true;
+                }
+            }
+            else
+            {
+                if (numAliveNeighbors == 3)
+                {
+                    cell.visible = true;
+                }
+            }
+
+            self.cellStatusesFuture[y * self.config.numCols + x] = cell.visible;
+        }, function(err){
+            self.cellStatuses = self.cellStatusesFuture;
+            console.log("Yolo !");
+            self.runAsyncGeneration();
+        });
+    },
+
+    /*
+     runAsyncGeneration : function() {
+
+     // Array to hold async tasks
+     var asyncTasks = [];
+
+     asyncTasks.push(function(callback) {
+     // Set a timeout
+     setTimeout(function(){
+     console.log("Hey bro");
+
+     callback();
+     }, 3000);
+     });
+
+     async.parallel(asyncTasks, function(){
+     // All tasks are done now
+     this.endOfAsyncGeneration();
+     })
+
+
+     },*/
+
+    endOfAsyncGeneration : function() {
+        console.log("Yolo");
+
+    },
+
     runGeneration : function(){
 
         // make a copy of the cell statuses that we can read from
-        var cellStatusesRead = this.cellStatuses.slice(0, this.config.numRows * this.config.numCols);
         var cellAlive = false;
         var numAliveNeighbors = 0;
         var cell;
@@ -188,8 +256,8 @@ GOL.prototype = {
             for (var x = 0; x < this.config.numCols; x++)
             {
                 cell = this.allCells[y * this.config.numCols + x];
-                cellAlive = cellStatusesRead[y * this.config.numCols + x];
-                numAliveNeighbors = this.getNumAliveNeighbors(cellStatusesRead, x, y);
+                cellAlive = this.cellStatuses[y * this.config.numCols + x];
+                numAliveNeighbors = this.getNumAliveNeighbors(this.cellStatuses, x, y);
 
                 if (cellAlive)
                 {
