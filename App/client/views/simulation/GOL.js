@@ -10,7 +10,6 @@ GOL = function(element, config){
 
     this.allCells = [];
     this.cellStatuses = [];
-    this.cellStatusesFuture = [];
     this.neighbors = [];
 
 
@@ -45,10 +44,11 @@ GOL.prototype = {
                 cell.visible = (Math.random() > 1-this.config.density);
                 cell.width = this.config.grid.cellSize;
                 cell.height = this.config.grid.cellSize;
+                cell.relativeX = x;
+                cell.relativeY = y;
 
                 this.allCells.push(cell);
                 this.cellStatuses.push(cell.visible);
-                this.cellStatusesFuture.push(cell.visible);
             }
         }
 
@@ -64,20 +64,18 @@ GOL.prototype = {
             .onDown.add(this.clearSimulation, this);
         this.phaser.input.keyboard.addKey(Phaser.Keyboard.F)
             .onDown.add(this.goFS, this);
+        this.phaser.input.keyboard.addKey(Phaser.Keyboard.A)
+            .onDown.add(this.launchAsyncGeneration, this);
 
         this.phaser.stage.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
-
         // ALGO SIMPLISTE
-        //ticker.subscribe(this.runGeneration);
-        this.runAsyncGeneration();
+        ticker.subscribe(this.runGeneration);
     },
 
     update : function () {
         if(  !this.phaser.input.activePointer.isDown)
             return;
-
-
 
         var x = Math.floor(this.phaser.input.x/this.config.grid.cellSize);
         var y = Math.floor(this.phaser.input.y/this.config.grid.cellSize);
@@ -126,7 +124,6 @@ GOL.prototype = {
         });
         for( var i = 0; i < this.cellStatuses.length; i++){
             this.cellStatuses[i] = false;
-            this.cellStatusesFuture[i] = false;
         }
     },
 
@@ -140,7 +137,6 @@ GOL.prototype = {
         });
         this.allCells = [];
         this.cellStatuses = [];
-        this.cellStatusesFuture = [];
 
         for (var y = 0; y < this.config.numRows; y++)
         {
@@ -150,10 +146,11 @@ GOL.prototype = {
                 cell.visible = (Math.random() > 1-this.config.density);
                 cell.width = this.config.grid.cellSize;
                 cell.height = this.config.grid.cellSize;
+                cell.relativeX = x;
+                cell.relativeY = y;
 
                 this.allCells.push(cell);
                 this.cellStatuses.push(cell.visible);
-                this.cellStatusesFuture.push(cell.visible);
             }
         }
     },
@@ -174,74 +171,63 @@ GOL.prototype = {
 
     },
 
-    runAsyncGeneration : function(){
+    runAsyncGeneration : function(cell) {
 
-        // make a copy of the cell statuses that we can read from
         var cellAlive = false;
         var numAliveNeighbors = 0;
-        var cell;
         var self = this;
-        async.each(this.allCells, function(item, callback) {
-            var x = item.x/self.config.grid.cellSize;
-            var y = item.y/self.config.grid.cellSize;
 
-            cell = self.allCells[y * self.config.numCols + x];
-            cellAlive = self.cellStatuses[y * self.config.numCols + x];
-            numAliveNeighbors = self.getNumAliveNeighbors(self.cellStatuses, x, y);
+        cellAlive = self.cellStatuses[cell.relativeY * self.config.numCols + cell.relativeX];
+        numAliveNeighbors = self.getNumAliveNeighbors(self.cellStatuses, cell.relativeX, cell.relativeY);
 
-            if (cellAlive)
+        if (cellAlive)
+        {
+            if (numAliveNeighbors < 2 || numAliveNeighbors > 3)
             {
-                if (numAliveNeighbors < 2 || numAliveNeighbors > 3)
-                {
-                    cell.visible = false;
-                }
-                else
-                {
-                    cell.visible = true;
-                }
+                cell.visible = false;
             }
             else
             {
-                if (numAliveNeighbors == 3)
-                {
-                    cell.visible = true;
-                }
+                cell.visible = true;
             }
+        }
+        else
+        {
+            if (numAliveNeighbors == 3)
+            {
+                cell.visible = true;
+            }
+        }
 
-            self.cellStatusesFuture[y * self.config.numCols + x] = cell.visible;
-        }, function(err){
-            self.cellStatuses = self.cellStatusesFuture;
-            console.log("Yolo !");
-            self.runAsyncGeneration();
-        });
+        self.cellStatuses[cell.relativeY * self.config.numCols + cell.relativeX] = cell.visible;
+
     },
 
-    /*
-     runAsyncGeneration : function() {
-
-     // Array to hold async tasks
-     var asyncTasks = [];
-
-     asyncTasks.push(function(callback) {
-     // Set a timeout
-     setTimeout(function(){
-     console.log("Hey bro");
-
-     callback();
-     }, 3000);
-     });
-
-     async.parallel(asyncTasks, function(){
-     // All tasks are done now
-     this.endOfAsyncGeneration();
-     })
-
-
-     },*/
-
     endOfAsyncGeneration : function() {
-        console.log("Yolo");
+        console.log("Yolo !");
+        this.launchAsyncGeneration();
 
+    },
+
+    launchAsyncGeneration : function() {
+
+        // Array to hold async tasks
+        var asyncTasks = [];
+
+        var self = this;
+        self.allCells.forEach(function(cell) {
+            asyncTasks.push(function() {
+                self.runAsyncGeneration(cell);
+            });
+            console.log("Yolo Boucle!");
+        });
+
+        async.parallel(asyncTasks, function(){
+
+            // All tasks are done now
+            console.log("Yolo !");
+            self.endOfAsyncGeneration();
+        });
     },
 
     runGeneration : function(){
