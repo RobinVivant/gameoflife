@@ -1,4 +1,4 @@
-GOL = function(element, config){
+GOL = function(config,phaser){
 
     this.elapsedTime = 0;
 
@@ -17,15 +17,13 @@ GOL = function(element, config){
     this.asyncGeneration = false;
 
     this.mode = "";
-
-
-    this.phaser = new Phaser.Game(config.grid.width, config.grid.height, Phaser.CANVAS, element, this);
+    this.phaser = phaser;
 };
 
 GOL.prototype = {
 
     preload : function(){
-        this.phaser.load.image('cell','assets/cell.png');
+
     },
 
     create : function(){
@@ -84,9 +82,11 @@ GOL.prototype = {
         if(  !this.phaser.input.activePointer.isDown)
             return;
 
-        var x = Math.floor(this.phaser.input.x/this.config.grid.cellSize);
-        var y = Math.floor(this.phaser.input.y/this.config.grid.cellSize);
-        var cell = this.allCells[y * this.config.numCols + x];
+        if(this.phaser.input.x<this.config.grid.width){
+            var x = Math.floor(this.phaser.input.x/this.config.grid.cellSize);
+            var y = Math.floor(this.phaser.input.y/this.config.grid.cellSize);
+            var cell = this.allCells[y * this.config.numCols + x];
+
 
         if( this.phaser.input.mouse.button == Phaser.Mouse.MIDDLE_BUTTON)
             cell.visible = false;
@@ -94,7 +94,7 @@ GOL.prototype = {
             cell.visible = true;
 
         this.cellStatuses[y * this.config.numCols + x] = cell.visible;
-
+        }
     },
 
     refreshGrid : function(){
@@ -109,11 +109,10 @@ GOL.prototype = {
     },
 
     render: function (){
-        this.phaser.debug.text("fps : " + Math.floor(1000/this.phaser.time.elapsed), 32, 32);
+        this.phaser.phaser.debug.text("fps : " + Math.floor(1000/this.phaser.time.elapsed), 32, 32);
     },
 
     destroy : function(){
-        this.phaser.destroy();
     },
 
     toggleRunning : function(){

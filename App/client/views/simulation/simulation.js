@@ -2,7 +2,7 @@
 
 Template.simulation.created = function(){
     $("#golImage").hide();
-    gol = new GOL('gol-canvas', GOLGConfig);
+    gol = new mainCanvas('gol-canvas', GOLGConfig);
 
     $('#gol-canvas').on("contextmenu", function(evt) {return false;});
 
