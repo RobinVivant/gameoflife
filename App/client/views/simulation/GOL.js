@@ -12,6 +12,12 @@ GOL = function(element, config){
     this.cellStatuses = [];
     this.neighbors = [];
 
+    this.cellFutures = [];
+
+    this.asyncGeneration = false;
+
+    this.mode = "";
+
 
     this.phaser = new Phaser.Game(config.grid.width, config.grid.height, Phaser.CANVAS, element, this);
 };
@@ -64,12 +70,13 @@ GOL.prototype = {
             .onDown.add(this.clearSimulation, this);
         this.phaser.input.keyboard.addKey(Phaser.Keyboard.F)
             .onDown.add(this.goFS, this);
-        this.phaser.input.keyboard.addKey(Phaser.Keyboard.A)
-            .onDown.add(this.launchAsyncGeneration, this);
+        this.phaser.input.keyboard.addKey(Phaser.Keyboard.S)
+            .onDown.add(this.switchMode, this);
 
         this.phaser.stage.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
         // ALGO SIMPLISTE
+        this.mode = "sync";
         ticker.subscribe(this.runGeneration);
     },
 
@@ -171,7 +178,32 @@ GOL.prototype = {
 
     },
 
-    runAsyncGeneration : function(cell) {
+    switchMode : function() {
+
+        if (ticker.isActive()) {
+            var self = this;
+            ticker.stop();
+            window.setTimeout(function(){
+                self.switchMode();
+                console.log("switchMode");
+            }, 100);
+            return;
+        }
+        if (this.mode == "async") {
+            console.log("caca");
+            ticker.unsubscribe(this.launchAsyncGeneration);
+            ticker.subscribe(this.runGeneration);
+            this.mode = "sync";
+        }
+        else {
+            ticker.unsubscribe(this.runGeneration);
+            ticker.subscribe(this.launchAsyncGeneration);
+            this.mode = "async";
+        }
+        this.toggleRunning();
+    },
+
+    evaluateOneStep : function(cell) {
 
         var cellAlive = false;
         var numAliveNeighbors = 0;
@@ -199,33 +231,43 @@ GOL.prototype = {
             }
         }
 
-        self.cellStatuses[cell.relativeY * self.config.numCols + cell.relativeX] = cell.visible;
+        self.cellFutures[cell.relativeY * self.config.numCols + cell.relativeX] = cell.visible;
 
     },
 
     endOfAsyncGeneration : function() {
-        console.log("Yolo !");
-        this.launchAsyncGeneration();
+
+        var tmp = this.cellStatuses;
+        this.cellStatuses = this.cellFutures;
+        this.cellFutures = tmp;
+
+        this.asyncGeneration = false;
+
+        //this.launchAsyncGeneration();
 
     },
 
     launchAsyncGeneration : function() {
 
+        if (this.asyncGeneration) {
+            return;
+        }
+        this.asyncGeneration = true;
         // Array to hold async tasks
         var asyncTasks = [];
 
         var self = this;
         self.allCells.forEach(function(cell) {
-            asyncTasks.push(function() {
-                self.runAsyncGeneration(cell);
+            asyncTasks.push(function(callback) {
+                self.evaluateOneStep(cell);
+                callback();
             });
-            console.log("Yolo Boucle!");
         });
 
-        async.parallel(asyncTasks, function(){
+        async.parallel(asyncTasks, function(err, results){
 
             // All tasks are done now
-            console.log("Yolo !");
+            //console.log("Yolo !");
             self.endOfAsyncGeneration();
         });
     },
@@ -264,9 +306,13 @@ GOL.prototype = {
                     }
                 }
 
-                this.cellStatuses[y * this.config.numCols + x] = cell.visible;
+                this.cellFutures[y * this.config.numCols + x] = cell.visible;
             }
         }
+        var tmp = this.cellStatuses;
+        this.cellStatuses = this.cellFutures;
+        this.cellFutures = tmp;
+
     },
 
     getNumAliveNeighbors : function(cells, x, y){
