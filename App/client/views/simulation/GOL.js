@@ -60,16 +60,8 @@ GOL.prototype = {
         this.phaser.input.mouse.mouseUpCallback = this.onMouseUp;
         this.phaser.input.mouse.callbackContext = this;
 
-        this.phaser.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
-            .onDown.add(this.toggleRunning, this);
-        this.phaser.input.keyboard.addKey(Phaser.Keyboard.R)
-            .onDown.add(this.resetSimulation, this);
-        this.phaser.input.keyboard.addKey(Phaser.Keyboard.ENTER)
-            .onDown.add(this.clearSimulation, this);
         this.phaser.input.keyboard.addKey(Phaser.Keyboard.F)
             .onDown.add(this.goFS, this);
-        this.phaser.input.keyboard.addKey(Phaser.Keyboard.S)
-            .onDown.add(this.switchMode, this);
 
         this.phaser.stage.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
@@ -87,8 +79,7 @@ GOL.prototype = {
             var y = Math.floor(this.phaser.input.y/this.config.grid.cellSize);
             var cell = this.allCells[y * this.config.numCols + x];
 
-
-        if( this.phaser.input.mouse.button == Phaser.Mouse.MIDDLE_BUTTON)
+        if( this.phaser.input.mouse.button == Phaser.Mouse.RIGHT_BUTTON)
             cell.visible = false;
         else
             cell.visible = true;
@@ -184,15 +175,14 @@ GOL.prototype = {
             ticker.stop();
             window.setTimeout(function(){
                 self.switchMode();
-                console.log("switchMode");
+                console.log("Mode switch to : " + self.mode);
             }, 100);
             return;
         }
         if (this.mode == "async") {
-            console.log("caca");
             ticker.unsubscribe(this.launchAsyncGeneration);
             ticker.subscribe(this.runGeneration);
-            this.mode = "sync";
+            this.mode = "iteratif";
         }
         else {
             ticker.unsubscribe(this.runGeneration);
