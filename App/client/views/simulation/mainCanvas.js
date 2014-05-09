@@ -27,16 +27,16 @@ mainCanvas.prototype = {
 
     create : function(){
         this.GOL.create();
-        this.btn_switchMode = this.phaser.add.button(800, 10, 'iteratif_parallel', this.actionOnSwitchMode, this, 0,1,2);
-        this.btn_launch = this.phaser.add.button(800, 400, 'launch', this.actionOnLaunch, this, 1,0,2);
+        this.btn_switchMode = this.phaser.add.button(600, 10, 'iteratif_parallel', this.actionOnSwitchMode, this, 0,1,2);
+        this.btn_launch = this.phaser.add.button(600, 400, 'launch', this.actionOnLaunch, this, 1,0,2);
         this.isAsyncActive = false;
         this.isLaunched = false;
 
-        this.btn_vider = this.phaser.add.button(800, 360, 'vider', this.actionOnVider, this, 1,0,0);
-        this.btn_reset = this.phaser.add.button(905, 360, 'reset', this.actionOnReset, this, 1,0,0);
+        this.btn_vider = this.phaser.add.button(600, 360, 'vider', this.actionOnVider, this, 1,0,0);
+        this.btn_reset = this.phaser.add.button(705, 360, 'reset', this.actionOnReset, this, 1,0,0);
 
         var style = {font : "12 Arial", fill: "White", align: "left"};
-        this.lbl_hotkeys = this.phaser.add.text(850,540,
+        this.lbl_hotkeys = this.phaser.add.text(650,540,
             "Raccourcis :\n(F) : Plein ecran \n(S) : Changer de mode \n(R) : Reset \n(Entree) : Vider \n(Espace) : Lancer", style);
         this.lbl_hotkeys.anchor.set(0.5);
 

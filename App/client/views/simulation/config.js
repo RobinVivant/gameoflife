@@ -1,6 +1,6 @@
 GOLGConfig = {
     grid : {
-        width : 800,
+        width : 600,
         height : 600,
         resolution : 0.05
     },
